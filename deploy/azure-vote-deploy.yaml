@@ -49,7 +49,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
         - name: azure-vote-front
-          image: microsoft/azure-vote-front:v1
+          image: registry.gitlab.com/nmeisenzahl/conconf-conli/azure-vote:latest
           ports:
             - containerPort: 80
           env:
