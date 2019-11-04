@@ -26,7 +26,7 @@ spec:
   type: image
   params:
     - name: url
-      value: gitlab.com/nmeisenzahl/conconf-conli/azure-vote:tekton
+      value: registry.gitlab.com/nmeisenzahl/conconf-conli/azure-vote:tekton
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Task
@@ -39,9 +39,11 @@ spec:
         type: git
     params:
       - name: pathToDockerFile
+        type: string
         description: Path to Dockerfile
-        default: Dockerfile
+        default: /workspace/git-repo/Dockerfile
       - name: pathToContext
+        type: string
         description: The build context used by Kaniko
         default: /workspace/git-repo
   outputs:
@@ -50,16 +52,15 @@ spec:
         type: image
   steps:
     - name: build-and-push
-      image: gcr.io/kaniko-project/executor:v0.10.0
+      image: gcr.io/kaniko-project/executor:v0.13.0
       env:
         - name: "DOCKER_CONFIG"
           value: "/builder/home/.docker/"
-      command:
-        - /kaniko/executor
+      command: ["/kaniko/executor"]
       args:
-        - --dockerfile=${inputs.params.pathToDockerFile}
-        - --destination=${outputs.resources.image-registry.url}
-        - --context=${inputs.params.pathToContext}
+        - "--dockerfile=$(inputs.params.pathToDockerFile)"
+        - "--destination=$(outputs.resources.image-registry.url)"
+        - "--context=$(inputs.params.pathToContext)"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
@@ -77,7 +78,7 @@ spec:
         name: build-docker-image
       params:
         - name: pathToDockerFile
-          value: Dockerfile
+          value: /workspace/git-repo/Dockerfile
         - name: pathToContext
           value: /workspace/git-repo
       resources:
