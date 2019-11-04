@@ -37,6 +37,6 @@ app deploy:
     name: registry.gitlab.com/nmeisenzahl/dockerfiles/kubectl:$KUBECTL_VERSION
     entrypoint: [""]
   script:
-    - kubectl apply -f -R ./deploy
+    - kubectl apply -f deploy/
   only:
     - master
