@@ -1,0 +1,42 @@
+stages:
+- build
+- deploy
+
+variables:
+  KANIKO_VERSION: "debug"
+  KUBECTL_VERSION: "latest"
+  GIT_SSL_NO_VERIFY: "1"
+
+build image:
+  stage: build
+  tags:
+      - aks
+  image: 
+    name: gcr.io/kaniko-project/executor:$KANIKO_VERSION
+    entrypoint: [""]
+  script:
+    - mkdir -p /root/.docker
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"gitlab-ci-token\",\"password\":\"$CI_JOB_TOKEN\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --skip-tls-verify --context $CI_PROJECT_DIR --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE/azure-vote:latest
+
+lint deploy:
+  stage: deploy
+  tags:
+      - aks
+  image:
+    name: registry.gitlab.com/nmeisenzahl/dockerfiles/yamllint:$KUBECTL_VERSION
+    entrypoint: [""]
+  script:
+    - yamllint ./deploy
+
+app deploy:
+  stage: deploy
+  tags:
+      - aks
+  image:
+    name: registry.gitlab.com/nmeisenzahl/dockerfiles/kubectl:$KUBECTL_VERSION
+    entrypoint: [""]
+  script:
+    - kubectl apply -f -R ./deploy
+  only:
+    - master
