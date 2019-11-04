@@ -1,5 +1,6 @@
 stages:
 - build
+- test
 - deploy
 
 variables:
@@ -7,7 +8,7 @@ variables:
   KUBECTL_VERSION: "latest"
   GIT_SSL_NO_VERIFY: "1"
 
-build:image:
+build image:
   stage: build
   tags:
       - aks
@@ -19,8 +20,8 @@ build:image:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"gitlab-ci-token\",\"password\":\"$CI_JOB_TOKEN\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --skip-tls-verify --context $CI_PROJECT_DIR --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE/azure-vote:latest
 
-deploy:lint:
-  stage: deploy
+deploy lint:
+  stage: test
   tags:
       - aks
   image:
@@ -29,7 +30,7 @@ deploy:lint:
   script:
     - yamllint ./deploy
 
-deploy:app:
+deploy app:
   stage: deploy
   tags:
       - aks
@@ -38,7 +39,5 @@ deploy:app:
     entrypoint: [""]
   script:
     - kubectl apply -f deploy/
-  dependencies:
-    - deploy:lint
   only:
     - master
